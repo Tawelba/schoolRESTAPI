@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    Int     @id @default(autoincrement())
+  email String  @unique
+  role  String
+  student Student?
+  staff   Staff?
+}
+
+model School {
+  id            Int     @id @default(autoincrement())
+  name          String
+  category      String
+  regd_no       String?
+  status        Boolean @default(true)
+  address       String
+  city          String
+  state         String
+  country       String
+  postal_code   String?
+  phone_number  String
+  email         String?
+  website       String?
+  motto         String?
+  logo          String?
+}
+model Staff {
+  id              Int @id @default(autoincrement())
+  category        String
+  staff_id        String? @unique
+  first_name      String
+  other_names     String
+  gender          String @db.VarChar(1)
+  date_of_birth   DateTime?
+  contact_number  String
+  job_title       String
+  hire_date       String
+  status          Boolean @default(true)
+  account         User @relation(fields: [accountId], references: [id])
+  accountId       Int  @unique // relation scalar field (used in the `@relation` 
+}
+
+model Student {
+  student_id      String @id
+  first_name      String
+  other_names     String
+  gender          String @db.VarChar(1)
+  date_of_birth   DateTime
+  address         String
+  city            String
+  region          String
+  country         String
+  postal_code     String
+  contact_number  String?
+  programme       Programmme? @relation(fields: [programmeId], references: [id])
+  programmeId     Int?
+  grade           Grade @relation(fields: [gradeId], references: [id])
+  gradeId         Int
+  house           House? @relation(fields: [houseId], references: [id])
+  houseId         Int?
+  guardians       StudentGuardians[]
+  account         User @relation(fields: [accountId], references: [id])
+  accountId       Int  @unique // relation scalar field 
+  status          Boolean @default(true)
+}
+model Programmme {
+  id        Int @id @default(autoincrement())
+  name      String
+  code      String?
+  students  Student[]
+}
+
+model House {
+  id          Int @id @default(autoincrement())
+  name        String
+  color       String?
+  students    Student[]
+}
+
+model Grade {
+  id        Int @id @default(autoincrement())
+  name      String
+  students  Student[]
+}
+
+model Guardian {
+  id              Int @id @default(autoincrement())
+  title           String
+  first_name      String
+  other_names     String
+  gender          String @db.VarChar(1)
+  address         String
+  city            String
+  region          String
+  country         String
+  postal_code     String
+  contact_number  String?
+  stduents        StudentGuardians[]
+}
+
+model StudentGuardians {
+  guardian        Guardian  @relation(fields: [guardianId], references: [id])
+  guardianId      Int // relation scalar field (used in the `@relation` attribute above) @map("postId")
+  student         Student @relation(fields: [studentId], references: [student_id])
+  studentId       String // relation scalar field (used in the `@relation` attribute above)
+  assignedAt      DateTime @default(now())
+  assignedBy      String
+  
+  @@id([guardianId, studentId])
+	@@map("StudentGuardians")
+}
