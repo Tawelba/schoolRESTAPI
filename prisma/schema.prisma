@@ -9,114 +9,106 @@ datasource db {
   provider = "mysql"
   url      = env("DATABASE_URL")
 }
-
-model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  role  String
-  student Student?
-  staff   Staff?
+enum SchoolLevels {
+  BASIC
+  SHS
 }
-
 model School {
-  id            Int     @id @default(autoincrement())
-  name          String
-  category      String
-  regd_no       String?
-  status        Boolean @default(true)
-  address       String
-  city          String
-  state         String
-  country       String
-  postal_code   String?
-  phone_number  String
-  email         String?
-  website       String?
-  motto         String?
-  logo          String?
-}
-model Staff {
-  id              Int @id @default(autoincrement())
-  category        String
-  staff_id        String? @unique
-  first_name      String
-  other_names     String
-  gender          String @db.VarChar(1)
-  date_of_birth   DateTime?
-  contact_number  String
-  job_title       String
-  hire_date       String
-  status          Boolean @default(true)
-  account         User @relation(fields: [accountId], references: [id])
-  accountId       Int  @unique // relation scalar field (used in the `@relation` 
-}
-
-model Student {
-  student_id      String @id
-  first_name      String
-  other_names     String
-  gender          String @db.VarChar(1)
-  date_of_birth   DateTime
+  id              Int       @id @unique @default(autoincrement())
+  level           SchoolLevels
+  name            String    @db.VarChar(255)@unique
+  regd_no         String?   @db.VarChar(255)@unique
+  motto           String?   @db.VarChar(255)
   address         String
+  postal_code     String?
+  phone           String?
   city            String
   region          String
-  country         String
-  postal_code     String
-  contact_number  String?
-  programme       Programmme? @relation(fields: [programmeId], references: [id])
-  programmeId     Int?
-  grade           Grade @relation(fields: [gradeId], references: [id])
-  gradeId         Int
-  house           House? @relation(fields: [houseId], references: [id])
-  houseId         Int?
-  guardians       StudentGuardians[]
-  account         User @relation(fields: [accountId], references: [id])
-  accountId       Int  @unique // relation scalar field 
-  status          Boolean @default(true)
-}
-model Programmme {
-  id        Int @id @default(autoincrement())
-  name      String
-  code      String?
-  students  Student[]
+  logo            String?   @db.VarChar(255)
+  students        Student[]
+  active          Boolean   @default(true)
+
+  @@map("schools")
 }
 
-model House {
-  id          Int @id @default(autoincrement())
-  name        String
-  color       String?
-  students    Student[]
+model User {
+  id        Int     @id @default(autoincrement())
+  email     String  @db.VarChar(255) @unique
+  password  String  @db.VarChar(255)
+  salt      String
+  role      String?
+  active    Boolean @default(true)
+  student   Student?
+  guardian  Guardian?
+  @@map("users")
+}
+
+model Programme {
+  id              Int       @id @unique @default(autoincrement())
+  name            String    @db.VarChar(255)@unique
+  code            String?   @db.VarChar(255)@unique
+  students        Student[]
+
+  @@map("programmes")
 }
 
 model Grade {
-  id        Int @id @default(autoincrement())
-  name      String
-  students  Student[]
+  id              Int       @id @unique @default(autoincrement())
+  name            String    @unique @db.VarChar(255)
+  short_name      String    @unique
+  students        Student[]
+  @@map("grades")
 }
-
-model Guardian {
-  id              Int @id @default(autoincrement())
-  title           String
-  first_name      String
-  other_names     String
-  gender          String @db.VarChar(1)
+model Student {
+  admission_id    String    @id @unique
+  admission_date  DateTime  @default(now())
+  firstname       String    @db.VarChar(255)
+  othernames      String    @db.VarChar(255)
+  gender          String    @db.VarChar(1)
+  date_of_birth   DateTime
+  phone           String?
   address         String
   city            String
   region          String
-  country         String
-  postal_code     String
-  contact_number  String?
-  stduents        StudentGuardians[]
+  account         User?       @relation(fields: [account_id], references: [id])
+  account_id      Int?        @unique
+  image           String?     @db.VarChar(255)
+  school          School      @relation(fields: [school_id], references: [id])
+  school_id       Int
+  programme       Programme?  @relation(fields: [programme_id], references: [id])
+  programme_id    Int?
+  grade           Grade       @relation(fields: [grade_id], references: [id])
+  grade_id        Int
+  active          Boolean     @default(true)
+  guardians       StudentGuardians[]
+
+  @@map("students")
 }
 
-model StudentGuardians {
-  guardian        Guardian  @relation(fields: [guardianId], references: [id])
-  guardianId      Int // relation scalar field (used in the `@relation` attribute above) @map("postId")
-  student         Student @relation(fields: [studentId], references: [student_id])
-  studentId       String // relation scalar field (used in the `@relation` attribute above)
-  assignedAt      DateTime @default(now())
-  assignedBy      String
-  
-  @@id([guardianId, studentId])
-	@@map("StudentGuardians")
+model Guardian {
+  id              Int       @id @default(autoincrement())
+  title           String    @db.VarChar(255)
+  firstname       String    @db.VarChar(255)
+  othernames      String    @db.VarChar(255)
+  gender          String    @db.VarChar(1)
+  relation        String    @db.VarChar(255)
+  phone           String?
+  address         String
+  city            String
+  region          String
+  account         User?     @relation(fields: [account_id], references: [id])
+  account_id      Int?      @unique
+  students        StudentGuardians[]
+
+  @@map("guardians")
 }
+model StudentGuardians {
+  student         Student   @relation(fields: [student_id], references: [admission_id])
+  student_id      String
+  guardian        Guardian  @relation(fields: [guardian_id], references: [id])
+  guardian_id     Int
+  assigned_at     DateTime  @default(now())
+  assigned_by     String
+  @@id([student_id, guardian_id])
+}
+

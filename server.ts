@@ -1,17 +1,29 @@
+import fastify, { FastifyInstance } from 'fastify';
 
-import express, { Express, Request, Response , Application } from 'express';
-import dotenv from 'dotenv';
+export const server: FastifyInstance = fastify();
 
-//For env File 
-dotenv.config();
+declare module 'fastify' {
+  export interface FastifyInstance {
+    auth: any
+  }
+}
 
-const app: Application = express();
-const port = process.env.PORT || 3000;
+declare module '@fastify/jwt' {
+  interface FastifyJwt {
+    user: {
+      id: string,
+      email: string,
+      role: string,
+      active: boolean
+    }
+  }
+}
+// Start the server.
+server.listen({ port: 3000 }, (err, address) => {
+  if (err) {
+    console.error(err);
+    process.exit(1);
+  }
 
-app.get('/', (req: Request, res: Response) => {
-  res.send('Welcome to Express & TypeScript Server');
-});
-
-app.listen(port, () => {
-  console.log(`Server ready at http://localhost:${port}`);
+  console.log(`Server ready at ${address}`);
 });
